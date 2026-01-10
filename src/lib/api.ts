@@ -1,6 +1,8 @@
 import { Product } from '@/types/product';
 
-const API_BASE_URL = 'https://fakestoreapi.com';
+// Read from environment variable (exposed to client if prefixed with NEXT_PUBLIC_)
+// Fallback to the original hard-coded URL if not provided.
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'https://fakestoreapi.com';
 
 export async function fetchProducts(): Promise<Product[]> {
   try {
