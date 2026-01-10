@@ -1,36 +1,176 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Product Explorer Dashboard
 
-## Getting Started
+A modern, responsive web application built with Next.js, TypeScript, and Tailwind CSS that allows users to browse, search, filter, and manage favorite products from the FakeStore API.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Core Features (All Implemented)
+
+✅ **Product Listing Page**
+- Fetches products from [FakeStore API](https://fakestoreapi.com/products)
+- Responsive grid layout (1 column on mobile, 2 on tablet, 3-4 on desktop)
+- Displays product image, title, price, and category
+- Loading states with skeleton components
+- Error handling with retry functionality
+
+✅ **Search & Filtering**
+- Real-time search by product title (client-side)
+- Category filtering with visual buttons
+- Combined search and filter functionality
+- Product count display
+
+✅ **Product Details Page**
+- Dynamic routing using Next.js App Router (`/products/[id]`)
+- Large product image display
+- Full product information (title, description, price, category, rating)
+- Navigation back to product list
+
+✅ **Favorites Feature**
+- Mark/unmark products as favorites
+- Persists favorites using localStorage
+- Filter to show only favorite products
+- Visual indicator (heart icon) on product cards
+- Favorites persist across page refreshes
+
+✅ **Responsive Design**
+- Mobile-first approach
+- Optimized for mobile, tablet, and desktop viewports
+- Touch-friendly interactive elements
+- Responsive grid layouts
+
+## Technical Implementation
+
+### Stack
+- **Next.js 16** (App Router)
+- **TypeScript** (strict mode)
+- **Tailwind CSS 4**
+- **React 19**
+
+### Architecture
+
+```
+product-explorer/
+├── app/
+│   ├── layout.tsx          # Root layout with metadata
+│   ├── page.tsx             # Product listing page
+│   ├── products/
+│   │   └── [id]/
+│   │       └── page.tsx     # Product details page
+│   └── globals.css          # Global styles
+├── components/
+│   ├── ProductCard.tsx      # Individual product card component
+│   ├── ProductGrid.tsx      # Grid layout for products
+│   ├── SearchBar.tsx        # Search input component
+│   ├── CategoryFilter.tsx   # Category filter buttons
+│   ├── LoadingSkeleton.tsx  # Loading state skeleton
+│   └── ErrorState.tsx       # Error display component
+├── lib/
+│   ├── api.ts               # API utility functions
+│   └── favorites.ts         # localStorage favorites management
+└── types/
+    └── product.ts           # TypeScript type definitions
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Key Design Decisions
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Client Components**: Used `'use client'` directive for interactive features (search, filters, favorites) that require client-side state management.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Type Safety**: All API responses and component props are fully typed with TypeScript interfaces. No `any` types used.
 
-## Learn More
+3. **Error Handling**: Comprehensive error handling with user-friendly error messages and retry functionality.
 
-To learn more about Next.js, take a look at the following resources:
+4. **State Management**: 
+   - React hooks (`useState`, `useEffect`, `useMemo`) for component state
+   - localStorage for favorites persistence
+   - Client-side filtering for performance
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+5. **Performance**:
+   - Next.js Image component for optimized image loading
+   - `useMemo` for expensive filtering operations
+   - API response caching with revalidation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+6. **Accessibility**:
+   - ARIA labels on interactive elements
+   - Semantic HTML structure
+   - Keyboard navigation support
 
-## Deploy on Vercel
+## Setup Instructions
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Prerequisites
+- Node.js 18+ and npm
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Installation
+
+1. Clone the repository:
+```bash
+git clone <repository-url>
+cd product-explorer
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Run the development server:
+```bash
+npm run dev
+```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Build for Production
+
+```bash
+npm run build
+npm start
+```
+
+## Project Structure
+
+- **Components**: Reusable UI components with proper TypeScript typing
+- **Lib**: Utility functions for API calls and localStorage management
+- **Types**: Centralized TypeScript type definitions
+- **App Router**: Next.js 13+ App Router structure with server/client component separation
+
+## Assumptions & Trade-offs
+
+### Assumptions
+1. The FakeStore API is available and stable
+2. Users have JavaScript enabled (required for client-side features)
+3. localStorage is available (for favorites persistence)
+4. Modern browser support (ES2017+)
+
+### Trade-offs
+1. **Client-side Filtering**: All filtering happens client-side for instant feedback. For very large datasets, server-side filtering would be more appropriate.
+
+2. **No Pagination**: All products are loaded at once. For production with large datasets, pagination or infinite scroll would be implemented.
+
+3. **No Server Components for Main Page**: The main listing page uses client components for interactivity. Some parts could be server components for better performance.
+
+4. **Simple Error Handling**: Error states are basic but functional. Production apps would benefit from more sophisticated error boundaries and logging.
+
+5. **No Authentication**: Favorites are stored locally. In a production app, this would be synced with a backend.
+
+## Future Enhancements (Bonus Features)
+
+While not required, these could be added:
+- Server Components for initial data fetching
+- Pagination or infinite scroll
+- Sorting by price (ascending/descending)
+- Dark mode toggle
+- Unit tests with Jest and React Testing Library
+- Enhanced accessibility features
+- Product comparison feature
+- Share functionality
+
+## Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
+## License
+
+This project is created as a technical assignment.
