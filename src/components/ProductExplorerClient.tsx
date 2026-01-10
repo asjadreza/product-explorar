@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { Product } from "@/types/product";
 import { getFavorites } from "@/lib/favorites";
+import { fetchProducts, fetchCategories } from "@/lib/api";
 import ProductGrid from "@/components/ProductGrid";
 import SearchBar from "@/components/SearchBar";
 import CategoryFilter from "@/components/CategoryFilter";
@@ -19,8 +20,8 @@ interface ProductExplorerClientProps {
 }
 
 export default function ProductExplorerClient({
-  products,
-  categories,
+  products: initialProducts,
+  categories: initialCategories,
   initialError,
 }: ProductExplorerClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
@@ -33,13 +34,40 @@ export default function ProductExplorerClient({
   const [sortOrder, setSortOrder] = useState<"" | "default" | "asc" | "desc">(
     ""
   );
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [categories, setCategories] = useState<string[]>(initialCategories);
+  const [error, setError] = useState<string | null>(initialError || null);
 
-  // Initialize favorites from localStorage
+  // Initialize favorites from localStorage and fetch data on client mount
   useEffect(() => {
     setFavorites(getFavorites());
-    // End the client-side loading state after hydration tasks complete
-    setIsClientLoading(false);
-  }, []);
+
+    // If no products passed from server, fetch on client to bypass Vercel 403 blocks
+    if (initialProducts.length === 0) {
+      const fetchData = async () => {
+        try {
+          const [prods, cats] = await Promise.all([
+            fetchProducts(),
+            fetchCategories(),
+          ]);
+          setProducts(prods);
+          setCategories(cats);
+          setError(null);
+        } catch (err) {
+          const errorMsg =
+            err instanceof Error ? err.message : "Failed to load products";
+          setError(errorMsg);
+        } finally {
+          setIsClientLoading(false);
+        }
+      };
+
+      fetchData();
+    } else {
+      // If server provided data, skip loading state
+      setIsClientLoading(false);
+    }
+  }, [initialProducts.length]);
 
   const handleCategoryChange = (category: string | null) => {
     setSelectedCategory(category);
@@ -120,10 +148,29 @@ export default function ProductExplorerClient({
   };
 
   const handleRetry = () => {
-    window.location.reload();
+    setError(null);
+    setIsClientLoading(true);
+    const fetchData = async () => {
+      try {
+        const [prods, cats] = await Promise.all([
+          fetchProducts(),
+          fetchCategories(),
+        ]);
+        setProducts(prods);
+        setCategories(cats);
+        setError(null);
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error ? err.message : "Failed to load products";
+        setError(errorMsg);
+      } finally {
+        setIsClientLoading(false);
+      }
+    };
+    fetchData();
   };
 
-  if (initialError) {
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
         <div className="max-w-7xl mx-auto">
@@ -133,7 +180,7 @@ export default function ProductExplorerClient({
             </h1>
             <ThemeToggle />
           </div>
-          <ErrorState message={initialError} onRetry={handleRetry} />
+          <ErrorState message={error} onRetry={handleRetry} />
         </div>
       </div>
     );
