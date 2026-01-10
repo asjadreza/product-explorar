@@ -9,14 +9,18 @@ export async function fetchProducts(): Promise<Product[]> {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch products');
+      const body = await response.text().catch(() => '<unable to read body>');
+      const msg = `Failed to fetch products: ${response.status} ${response.statusText} - ${body}`;
+      console.error(msg);
+      throw new Error(msg);
     }
 
     const products: Product[] = await response.json();
     return products;
   } catch (error) {
+    const errMsg = error instanceof Error ? `Network error fetching products: ${error.message}` : 'Unknown error fetching products';
     console.error('Error fetching products:', error);
-    throw error;
+    throw new Error(errMsg);
   }
 }
 
@@ -27,14 +31,18 @@ export async function fetchProductById(id: number): Promise<Product> {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch product with id ${id}`);
+      const body = await response.text().catch(() => '<unable to read body>');
+      const msg = `Failed to fetch product ${id}: ${response.status} ${response.statusText} - ${body}`;
+      console.error(msg);
+      throw new Error(msg);
     }
 
     const product: Product = await response.json();
     return product;
   } catch (error) {
+    const errMsg = error instanceof Error ? `Network error fetching product ${id}: ${error.message}` : `Unknown error fetching product ${id}`;
     console.error(`Error fetching product ${id}:`, error);
-    throw error;
+    throw new Error(errMsg);
   }
 }
 
@@ -45,14 +53,18 @@ export async function fetchCategories(): Promise<string[]> {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to fetch categories');
+      const body = await response.text().catch(() => '<unable to read body>');
+      const msg = `Failed to fetch categories: ${response.status} ${response.statusText} - ${body}`;
+      console.error(msg);
+      throw new Error(msg);
     }
 
     const categories: string[] = await response.json();
     return categories;
   } catch (error) {
+    const errMsg = error instanceof Error ? `Network error fetching categories: ${error.message}` : 'Unknown error fetching categories';
     console.error('Error fetching categories:', error);
-    throw error;
+    throw new Error(errMsg);
   }
 }
 

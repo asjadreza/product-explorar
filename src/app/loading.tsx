@@ -1,14 +1,12 @@
 import LoadingSkeleton from '@/components/LoadingSkeleton';
-import ThemeToggle from '@/components/ThemeToggle';
 
 export default function Loading() {
+  // Loading fallback should only show the skeleton. The page header is
+  // rendered by the client component (`ProductExplorerClient`) to avoid
+  // duplicate headers when the app router renders server-side loading UI.
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Product Explorer</h1>
-          <ThemeToggle />
-        </div>
         <LoadingSkeleton />
       </div>
     </div>

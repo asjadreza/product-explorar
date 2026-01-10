@@ -17,22 +17,16 @@ export default async function HomePage() {
     error = err instanceof Error ? err.message : 'Failed to load products';
   }
 
-  // Show loading skeleton if there's an error (client component will handle error display)
+  // If there was a server-side fetch error, let the client component
+  // render the page header and an ErrorState. Avoid duplicating the
+  // header here to prevent double rendering.
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Product Explorer</h1>
-            <ThemeToggle />
-          </div>
-          <ProductExplorerClient
-            products={products}
-            categories={categories}
-            initialError={error}
-          />
-        </div>
-      </div>
+      <ProductExplorerClient
+        products={products}
+        categories={categories}
+        initialError={error}
+      />
     );
   }
 
