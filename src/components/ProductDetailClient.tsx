@@ -6,27 +6,67 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Product } from '@/types/product';
 import { toggleFavorite, isFavorite } from '@/lib/favorites';
+import { fetchProductById } from '@/lib/api';
 import ErrorState from '@/components/ErrorState';
+import LoadingSkeleton from '@/components/LoadingSkeleton';
 import { Heart, ArrowLeft, Star } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 
 interface ProductDetailClientProps {
+  productId?: number;
   product: Product | null;
   initialError?: string | null;
 }
 
 export default function ProductDetailClient({
-  product,
+  productId,
+  product: initialProduct,
   initialError,
 }: ProductDetailClientProps) {
   const router = useRouter();
+  const [product, setProduct] = useState<Product | null>(initialProduct);
+  const [error, setError] = useState<string | null>(initialError || null);
+  const [isLoading, setIsLoading] = useState(!initialProduct && productId !== undefined);
   const [favorited, setFavorited] = useState(false);
 
+  // Fetch product on client mount if not provided by server
   useEffect(() => {
-    if (product) {
-      setFavorited(isFavorite(product.id));
+    if (initialProduct) {
+      setProduct(initialProduct);
+      setFavorited(isFavorite(initialProduct.id));
+      setIsLoading(false);
+      return;
     }
-  }, [product]);
+
+    if (!productId) return;
+
+    const fetchProduct = async () => {
+      try {
+        const prod = await fetchProductById(productId);
+        setProduct(prod);
+        setFavorited(isFavorite(prod.id));
+        setError(null);
+      } catch (err) {
+        // Extract just the first part of the error message before "403" or other HTML
+        let errorMsg = 'Failed to load product details';
+        if (err instanceof Error) {
+          const msg = err.message;
+          if (msg.includes('403')) {
+            errorMsg = 'Product not available at the moment. Please try again later.';
+          } else if (msg.includes('Failed to fetch')) {
+            errorMsg = 'Failed to load product. Please check your connection.';
+          } else {
+            errorMsg = msg.split(' -')[0]; // Take only the error part before HTML
+          }
+        }
+        setError(errorMsg);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [productId, initialProduct]);
 
   const handleFavoriteToggle = () => {
     if (product) {
@@ -36,14 +76,65 @@ export default function ProductDetailClient({
   };
 
   const handleRetry = () => {
-    if (product) {
-      window.location.reload();
-    } else {
+    if (!productId) {
       router.push('/');
+      return;
     }
+    setError(null);
+    setIsLoading(true);
+    const fetchProduct = async () => {
+      try {
+        const prod = await fetchProductById(productId);
+        setProduct(prod);
+        setFavorited(isFavorite(prod.id));
+        setError(null);
+      } catch (err) {
+        let errorMsg = 'Failed to load product details';
+        if (err instanceof Error) {
+          const msg = err.message;
+          if (msg.includes('403')) {
+            errorMsg = 'Product not available at the moment. Please try again later.';
+          } else if (msg.includes('Failed to fetch')) {
+            errorMsg = 'Failed to load product. Please check your connection.';
+          } else {
+            errorMsg = msg.split(' -')[0];
+          }
+        }
+        setError(errorMsg);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProduct();
   };
 
-  if (initialError || !product) {
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between mb-6">
+            <Link
+              href="/"
+              className="inline-flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Back to Products
+            </Link>
+            <ThemeToggle />
+          </div>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg dark:shadow-gray-900/50 overflow-hidden p-8">
+            <div className="animate-pulse space-y-4">
+              <div className="h-96 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3" />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !product) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 px-4">
         <div className="max-w-4xl mx-auto">
@@ -58,7 +149,7 @@ export default function ProductDetailClient({
             <ThemeToggle />
           </div>
           <ErrorState
-            message={initialError || 'Product not found'}
+            message={error || 'Product not found'}
             onRetry={handleRetry}
           />
         </div>

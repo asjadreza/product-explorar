@@ -1,4 +1,3 @@
-import { fetchProductById } from '@/lib/api';
 import ProductDetailClient from '@/components/ProductDetailClient';
 import { notFound } from 'next/navigation';
 
@@ -14,24 +13,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
     notFound();
   }
 
-  let product = null;
-  let error: string | null = null;
-
-  try {
-    product = await fetchProductById(productId);
-  } catch (err) {
-    error = err instanceof Error ? err.message : 'Failed to load product details';
-  }
-
-  if (error || !product) {
-    return (
-      <ProductDetailClient
-        product={null}
-        initialError={error || 'Product not found'}
-      />
-    );
-  }
-
-  return <ProductDetailClient product={product} initialError={null} />;
+  // Fetch product on client to avoid Vercel/Cloudflare 403 blocking on server-side builds
+  return <ProductDetailClient productId={productId} product={null} initialError={null} />;
 }
 
