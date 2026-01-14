@@ -14,15 +14,15 @@ import { Heart } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
 
 interface ProductExplorerClientProps {
-  products: Product[];
-  categories: string[];
-  initialError?: string | null;
+  initialProducts?: Product[];       // Make optional with default
+  initialCategories?: string[];      // Make optional with default
+  initialError?: string | null;      // Already optional
 }
 
 export default function ProductExplorerClient({
-  products: initialProducts,
-  categories: initialCategories,
-  initialError,
+  initialProducts = [],
+  initialCategories = [],
+  initialError = null  
 }: ProductExplorerClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -36,38 +36,33 @@ export default function ProductExplorerClient({
   );
   const [products, setProducts] = useState<Product[]>(initialProducts);
   const [categories, setCategories] = useState<string[]>(initialCategories);
-  const [error, setError] = useState<string | null>(initialError || null);
+  const [error, setError] = useState<string | null>(initialError);
 
   // Initialize favorites from localStorage and fetch data on client mount
   useEffect(() => {
     setFavorites(getFavorites());
 
-    // If no products passed from server, fetch on client to bypass Vercel 403 blocks
-    if (initialProducts.length === 0) {
-      const fetchData = async () => {
-        try {
-          const [prods, cats] = await Promise.all([
-            fetchProducts(),
-            fetchCategories(),
-          ]);
-          setProducts(prods);
-          setCategories(cats);
-          setError(null);
-        } catch (err) {
-          const errorMsg =
-            err instanceof Error ? err.message : "Failed to load products";
-          setError(errorMsg);
-        } finally {
-          setIsClientLoading(false);
-        }
-      };
+    // Always fetch on client to bypass Vercel 403 blocks
+    const fetchData = async () => {
+      try {
+        const [prods, cats] = await Promise.all([
+          fetchProducts(),
+          fetchCategories(),
+        ]);
+        setProducts(prods);
+        setCategories(cats);
+        setError(null);
+      } catch (err) {
+        const errorMsg =
+          err instanceof Error ? err.message : "Failed to load products";
+        setError(errorMsg);
+      } finally {
+        setIsClientLoading(false);
+      }
+    };
 
-      fetchData();
-    } else {
-      // If server provided data, skip loading state
-      setIsClientLoading(false);
-    }
-  }, [initialProducts.length]);
+    fetchData();
+  }, []); // Empty dependency array - runs once on mount
 
   const handleCategoryChange = (category: string | null) => {
     setSelectedCategory(category);
@@ -135,6 +130,7 @@ export default function ProductExplorerClient({
   useEffect(() => {
     setCurrentPage(1);
   }, [filteredProducts.length]);
+
 
   const totalPages = Math.max(1, Math.ceil(filteredProducts.length / pageSize));
 
@@ -217,38 +213,6 @@ export default function ProductExplorerClient({
             <div className="flex-1">
               <SearchBar value={searchQuery} onChange={setSearchQuery} />
             </div>
-
-            {/* <div className="flex items-center gap-3">
-              <label htmlFor="sort-select" className="sr-only">Sort by</label>
-              <select
-                id="sort-select"
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as '' | 'default' | 'asc' | 'desc')}
-                className="w-32 px-4 py-2 rounded-lg font-medium cursor-pointer transition-colors bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                aria-label="Sort products by price"
-              >
-                <option value="default">Default</option>
-                <option value="asc">Low to High</option>
-                <option value="desc">High to Low</option>
-              </select>
-
-              <button
-                onClick={handleFavoritesToggle}
-                className={`px-6 py-2 rounded-lg font-medium cursor-pointer transition-colors flex items-center gap-2 ${
-                  showFavoritesOnly
-                    ? 'bg-red-600 text-white'
-                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
-                }`}
-                aria-label={showFavoritesOnly ? 'Show all products' : 'Show favorites only'}
-              >
-                <Heart
-                  className={`w-5 h-5 ${
-                    showFavoritesOnly ? 'fill-white' : ''
-                  }`}
-                />
-                {showFavoritesOnly ? 'Show All' : 'Favorites'}
-              </button>
-            </div> */}
 
             <div className="flex items-center gap-3">
               <label htmlFor="sort-select" className="sr-only">

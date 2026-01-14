@@ -8,7 +8,6 @@ import { Product } from '@/types/product';
 import { toggleFavorite, isFavorite } from '@/lib/favorites';
 import { fetchProductById } from '@/lib/api';
 import ErrorState from '@/components/ErrorState';
-import LoadingSkeleton from '@/components/LoadingSkeleton';
 import { Heart, ArrowLeft, Star } from 'lucide-react';
 import ThemeToggle from '@/components/ThemeToggle';
 
